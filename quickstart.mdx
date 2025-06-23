@@ -92,7 +92,9 @@ export OPENAI_API_KEY="your-api-key"
 OPENAI_API_KEY="your-api-key"
 ```
 
-> Note: `.env` files are automatically loaded by Dropstep.
+<Info>
+`.env` files are automatically loaded by Dropstep.
+</Info>
 
 ### Run the Workflow
 
@@ -104,7 +106,9 @@ dropstep run
 
 ### Expected Outcome & Output
 
+<Info>
 The first time you run a `browser_agent` step, Dropstep will set up a virtual environment for the agent. This might take a minute or two as it downloads and installs necessary dependencies. Subsequent runs will be faster.
+</Info>
 
 You should see a browser window open and navigate to `https://dropstep.tech`. The agent will then perform the task you specified in the `prompt` field.
 
