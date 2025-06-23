@@ -104,6 +104,8 @@ Navigate to your `my-dropstep-intro` directory in your terminal and run:
 dropstep run
 ```
 
+By default, logs and agent output are stored in `.dropstep/logs/`, with a separate file for each workflow run.
+
 ### Expected Outcome & Output
 
 <Info>
@@ -126,7 +128,11 @@ You'll see logs similar to this:
 [INFO <timestamp>] workflow: Shutting down logger...
 ```
 
-The key part is the agent's summary message and the final JSON output, which contains a `summary` field with the agent's response to your prompt. This demonstrates the browser agent's ability to perform tasks in a web browser and return structured data.
+The key part is the agent's summary message and the final JSON output, which by default contains a `summary` field with the agent's response to your prompt. This demonstrates the browser agent's ability to perform tasks in a web browser and return structured data.
+
+<Info>
+You can also find this output JSON in `.dropstep/output/visit_dropstep_site_output.json`. Visit the [Structured Output Guide](/structured-output) to learn more about customizing an agent's structured output format.
+</Info>
 
 ## Fin
 

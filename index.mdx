@@ -35,17 +35,18 @@ Dropstep is designed to bring structure and extensibility to your automations, e
 - **Reusability:** Powerful templating and variable functionality to run workflows with modular inputs.
 - **Declarative syntax:** Focus on *what* you want to achieve, rather than *how* to implement the low-level details.
 - **Inter-step data passing:** Seamlessly pass outputs from one step as inputs to another, creating powerful data pipelines.
-- **Secrets management:** Securely handle sensitive information like API keys through environment variables and built-in redaction in logs.
+- **Secrets management:** Securely handle sensitive information like API keys through varfiles, templating, and built-in redaction in logs.
 - **Extensibility:** Easily extend built-in functionality by embedding shell and Python scripts for custom logic.
 
 Whether you're automating web interactions, orchestrating local scripts, or integrating with APIs, Dropstep provides a unified platform to build and manage your automations.
 
-## Core Concepts
+## Vocabulary
 
 To get started with Dropstep, it's helpful to understand a few core concepts:
 
 - **Workflow:** This is the heart of Dropstep, defined in a `dropstep.yml` (or custom-named) YAML file.
-- **Step:** A step is an individual unit of work within a workflow. Each step performs a specific action, such as "run this shell command", "instruct the browser agent to do X", or "make a POST request to this URL". Steps are executed in the order they are defined.
-- **Runner:** Behind each step type is a "runner". This is the internal Dropstep component responsible for understanding the step's configuration and executing the task.
-- **Variables:** Dropstep workflows support dynamic data. Variables allow you to inject configuration values into your workflow at runtime (e.g., from a separate `dsvars.yml` file or environment variables) and, crucially, pass data from one step to another.
-- **Providers:** For steps that interact with external services, particularly LLM-driven browser agents, `providers` allow you to configure access details such as API keys and other authentication information.
+- **Agent:** Agents in Dropstep are autonomous task runners, often powered by LLMs, that can operate browsers, APIs, and scripts using natural language prompts and runtime context.
+- **Step:** A step is an individual unit of work within a workflow. Each step defines an intent, such as "run this shell command", "instruct the browser agent to do X", or "make a POST request to this URL". Steps are executed in the order they are defined.
+- **Runner:** Runners are modular executors behind each step type (e.g. `shell`, `browser_agent`, `http`). They define how to interpret and execute each kind of task, and can be extended to support new step types.
+- **Varfile:** Dropstep workflows support dynamic data. Variables allow you to inject configuration values into your workflow at runtime (e.g., from a separate `dsvars.yml` file or environment variables).
+- **Provider:** Providers allow you to configure access details such as API keys and other authentication information.
