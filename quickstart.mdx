@@ -1,97 +1,139 @@
 ---
 title: 'Quickstart'
-description: 'Start building awesome documentation in under 5 minutes'
+description: 'Start building intelligent workflows in under 5 minutes'
 ---
 
-## Setup your development
+## Installation
 
-Learn how to update your docs locally and deploy them to the public.
+### Prerequisites
 
-### Edit and preview
+- Ensure you have Go installed on your system. You can find Go releases at [go.dev/dl/](https://go.dev/dl/).
+- Git must be installed.
 
-<AccordionGroup>
-  <Accordion icon="github" title="Clone your docs locally">
-    During the onboarding process, we created a repository on your Github with
-    your docs content. You can find this repository on our
-    [dashboard](https://dashboard.mintlify.com). To clone the repository
-    locally, follow these
-    [instructions](https://docs.github.com/en/repositories/creating-and-managing-repositories/cloning-a-repository)
-    in your terminal.
-  </Accordion>
-  <Accordion icon="rectangle-terminal" title="Preview changes">
-    Previewing helps you make sure your changes look as intended. We built a
-    command line interface to render these changes locally. 
-    1. Install the
-    [Mintlify CLI](https://www.npmjs.com/package/mintlify) to preview the
-    documentation changes locally with this command: ``` npm i -g mintlify ```
-    2. Run the following command at the root of your documentation (where
-    `docs.json` is): ``` mintlify dev ```
-    <Note>
-      If you’re currently using the legacy ```mint.json``` configuration file, please update the Mintlify CLI:
+### Install
+
+```bash
+go install github.com/arnavsurve/dropstep@latest
+```
+
+This command will fetch the latest version of Dropstep, compile it, and place the `dropstep` executable in your Go binary directory (usually `$GOPATH/bin` or `$HOME/go/bin`).
+
+### Verify
+
+Ensure your Go binary directory is in your system's PATH. You can verify your Dropstep installation with:
+
+```bash
+dropstep --help
+```
+
+This should display the help message for the Dropstep CLI, listing available commands. If you see this, Dropstep is installed successfully.
 
 
-      ```npm i -g mintlify@latest```
-      And run the new upgrade command in your docs repository:
+## Your First Workflow
 
-      ```mintlify upgrade```
-      You should now be using the new ```docs.json``` configuration file. Feel free to delete the ```mint.json``` file from your repository.
-    </Note>
-  </Accordion>
-</AccordionGroup>
+Let's create a workflow that uses the `browser_agent` to visit [dropstep.tech](https://dropstep.tech) and tell us what it's about.
 
-### Deploy your changes
+You will need access to an OpenAI API key. You can get one from [OpenAI](https://openai.com/api/).
 
-<AccordionGroup>
+### Author a Workflow
 
-<Accordion icon="message-bot" title="Install our Github app">
-  Our Github app automatically deploys your changes to your docs site, so you
-  don't need to manage deployments yourself. You can find the link to install on
-  your [dashboard](https://dashboard.mintlify.com). Once the bot has been
-  successfully installed, there should be a check mark next to the commit hash
-  of the repo.
-</Accordion>
-<Accordion icon="rocket" title="Push your changes">
-  [Commit and push your changes to
-  Git](https://docs.github.com/en/get-started/using-git/pushing-commits-to-a-remote-repository#about-git-push)
-  for your changes to update in your docs site. If you push and don't see that
-  the Github app successfully deployed your changes, you can also manually
-  update your docs through our [dashboard](https://dashboard.mintlify.com).
-</Accordion>
+Create a new directory for your workflow, let's call it `my-dropstep-intro`. Inside this directory, create the following files:
 
-</AccordionGroup>
 
-## Update your docs
+#### `dropstep.yml`
 
-Add content directly in your files with MDX syntax and React components. You can use any of our components, or even build your own.
+```yaml dropstep.yml
+name: Dropstep Introduction Agent
+description: An agent visits a website to find out what it is.
 
-<CardGroup>
+inputs:                                  # Define inputs for the workflow
+  - name: openai_api_key
+    type: string
+    required: true
+    secret: true                         # Mark the input as a secret to prevent it from being logged
+  - name: url
+    type: string
+    required: true
 
-<Card title="Add Content With MDX" icon="file" href="/essentials/markdown">
-  Add content to your docs with MDX syntax.
-</Card>
+providers:
+  - name: my_openai_provider             # A user-defined name for this provider config
+    type: openai                         # Specifies the LLM provider
+    api_key: "{{ openai_api_key }}"      # Reference the input variable defined above
 
-<Card
-  title="Add Code Blocks"
-  icon="square-code"
-  href="/essentials/code"
->
-  Add code directly to your docs with syntax highlighting.
-</Card>
+steps:
+  - id: visit_dropstep_site              # A user-defined name for this step
+    uses: browser_agent                  # Specifies the step type
+    provider: my_openai_provider         # Specifies the user-defined provider to use
+    prompt: "Go to {{ url }} and tell me about it."
+```
 
-<Card
-  title="Add Images"
-  icon="image"
-  href="/essentials/images"
->
-  Add images to your docs to make them more engaging.
-</Card>
+#### `dsvars.yml`
 
-<Card
-  title="Add Custom Components"
-  icon="puzzle-piece"
-  href="/essentials/reusable-snippets"
->
-  Add templates to your docs to make them more reusable.
-</Card>
+```yaml dsvars.yml
+openai_api_key: "{{ env.OPENAI_API_KEY }}"
+url: "https://dropstep.tech"
+```
 
-</CardGroup>
+This tells Dropstep to get the values for the `openai_api_key` and `url` input variables. The `{{ env.* }}` syntax tells Dropstep to resolve the value from an environment variable.
+
+### Provide the API Key
+
+You still need to make your OpenAI API key available as an environment variable. There are two common ways to do this:
+
+1. Set it as an environment variable:
+
+```bash bash
+export OPENAI_API_KEY="your-api-key"
+```
+
+2. Define it in a `.env` file in the same directory as your workflow:
+
+```env .env
+OPENAI_API_KEY="your-api-key"
+```
+
+> Note: `.env` files are automatically loaded by Dropstep.
+
+### Run the Workflow
+
+Navigate to your `my-dropstep-intro` directory in your terminal and run:
+
+```bash bash
+dropstep run
+```
+
+### Expected Outcome & Output
+
+The first time you run a `browser_agent` step, Dropstep will set up a virtual environment for the agent. This might take a minute or two as it downloads and installs necessary dependencies. Subsequent runs will be faster.
+
+You should see a browser window open and navigate to `https://dropstep.tech`. The agent will then perform the task you specified in the `prompt` field.
+
+You'll see logs similar to this:
+
+```
+[INFO <timestamp>] workflow: Validating Dropstep Introduction Agent using dsvars.yml
+[INFO <timestamp>] workflow: Successfully loaded workflow: Dropstep Introduction Agent
+...
+[INFO <timestamp>] visit_dropstep_site: Step completed
+[INFO <timestamp>] visit_dropstep_site: Received agent output: {
+    "summary": "Dropstep is a tool for declarative agentic automation, allowing users to define workflows in YAML to automate tasks like browser interactions, script execution, and API calls."
+  }
+[INFO <timestamp>] workflow: Workflow completed successfully. Logs can be found at ".dropstep/logs/<some_uuid>.json"
+[INFO <timestamp>] workflow: Shutting down logger...
+```
+
+The key part is the agent's summary message and the final JSON output, which contains a `summary` field with the agent's response to your prompt. This demonstrates the browser agent's ability to perform tasks in a web browser and return structured data.
+
+## Fin
+
+**That's it.** You've successfully run your first Dropstep agent workflow!
+
+This simple example demonstrates the core power of Dropstep: defining intelligent, multi-step tasks in a clear YAML format and executing them. You've seen firsthand how:
+
+- A `browser_agent` can understand a natural language `prompt` and perform tasks in a web browser.
+- `providers` are used to configure external services like OpenAI, with API keys managed securely.
+- Running even sophisticated agentic tasks is streamlined with a simple `dropstep run` command.
+
+**This is just the tip of the iceberg.** Dropstep is designed to be extensible and flexible, allowing you to define workflows that fit your specific needs. 
+
+**Ready to learn more?** Dive into the [Workflow Definition Guide](/workflow-definition) to explore all step types, advanced templating, and inter-step data handoff.

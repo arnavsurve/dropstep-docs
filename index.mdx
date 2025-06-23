@@ -1,71 +1,51 @@
 ---
-title: Introduction
-description: "Welcome to the home of your new documentation"
+title: "Introduction"
+description: "Agents, for real this time."
 ---
 
 <img
   className="block dark:hidden"
-  src="/images/hero-light.png"
-  alt="Hero Light"
+  src="/images/dropstep-run-light.png"
+  width="200"
+  height="auto"
+  alt="Dropstep Run Light"
 />
 <img
   className="hidden dark:block"
-  src="/images/hero-dark.png"
-  alt="Hero Dark"
+  src="/images/dropstep-run-dark.png"
+  width="200"
+  height="auto"
+  alt="Dropstep Run Dark"
 />
 
-## Setting up
+## Dropstep?
 
-The first step to world-class documentation is setting up your editing environments.
+Dropstep is an **agent automation framework**.
 
-<CardGroup cols={2}>
-  <Card
-    title="Edit Your Docs"
-    icon="pen-to-square"
-    href="https://mintlify.com/docs/quickstart"
-  >
-    Get your docs set up locally for easy development
-  </Card>
-  <Card
-    title="Preview Changes"
-    icon="image"
-    href="https://mintlify.com/docs/development"
-  >
-    Preview your changes before you push to make sure they're perfect
-  </Card>
-</CardGroup>
+At its core, Dropstep allows you to define intelligent workflows in a declarative, human-readable YAML format. These workflows are made up of:
 
-## Make it yours
+- **Browser automation:** Instruct an AI agent to perform tasks in a web browser, like filling forms, navigating sites, or extracting information.
+- **Shell scripts:** Run arbitrary shell commands or scripts for system-level tasks.
+- **Python programs:** Embed Python for data processing, custom logic, or leverage specific Python libraries.
+- **HTTP requests:** Integrate with any API or service via HTTP requests.
 
-Update your docs to your brand and add valuable content for the best user conversion.
+Dropstep is designed to bring structure and extensibility to your automations, emphasizing:
 
-<CardGroup cols={2}>
-  <Card
-    title="Customize Style"
-    icon="palette"
-    href="https://mintlify.com/docs/settings/global"
-  >
-    Customize your docs to your company's colors and brands
-  </Card>
-  <Card
-    title="Reference APIs"
-    icon="code"
-    href="https://mintlify.com/docs/api-playground/openapi"
-  >
-    Automatically generate endpoints from an OpenAPI spec
-  </Card>
-  <Card
-    title="Add Components"
-    icon="screwdriver-wrench"
-    href="https://mintlify.com/docs/content/components/accordions"
-  >
-    Build interactive features and designs to guide your users
-  </Card>
-  <Card
-    title="Get Inspiration"
-    icon="stars"
-    href="https://mintlify.com/customers"
-  >
-    Check out our showcase of our favorite documentation
-  </Card>
-</CardGroup>
+- **Repeatability:** Define a workflow once and run it consistently, ensuring reliable outcomes.
+- **Reusability:** Powerful templating and variable functionality to run workflows with modular inputs.
+- **Declarative syntax:** Focus on *what* you want to achieve, rather than *how* to implement the low-level details.
+- **Inter-step data passing:** Seamlessly pass outputs from one step as inputs to another, creating powerful data pipelines.
+- **Secrets management:** Securely handle sensitive information like API keys through environment variables and built-in redaction in logs.
+- **Extensibility:** Easily extend built-in functionality by embedding shell and Python scripts for custom logic.
+
+Whether you're automating web interactions, orchestrating local scripts, or integrating with APIs, Dropstep provides a unified platform to build and manage your automations.
+
+## Core Concepts
+
+To get started with Dropstep, it's helpful to understand a few core concepts:
+
+- **Workflow:** This is the heart of Dropstep, defined in a `dropstep.yml` (or custom-named) YAML file.
+- **Step:** A step is an individual unit of work within a workflow. Each step performs a specific action, such as "run this shell command", "instruct the browser agent to do X", or "make a POST request to this URL". Steps are executed in the order they are defined.
+- **Runner:** Behind each step type is a "runner". This is the internal Dropstep component responsible for understanding the step's configuration and executing the task.
+- **Variables:** Dropstep workflows support dynamic data. Variables allow you to inject configuration values into your workflow at runtime (e.g., from a separate `dsvars.yml` file or environment variables) and, crucially, pass data from one step to another.
+- **Providers:** For steps that interact with external services, particularly LLM-driven browser agents, `providers` allow you to configure access details such as API keys and other authentication information.
