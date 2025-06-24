@@ -35,17 +35,19 @@ inputs:
 
 <ParamField path="inputs" type="object[]">
     An optional list of input variable definitions.
-    <ParamField path="name" type="string" required>
-        The unique name of the input variable. This name will be used for templating (e.g., `{{ my_input_name }}`).
-    </ParamField>
 
-    <ParamField path="type" type="string" required>
-        The expected data type of the input. Valid types are:
-        - `string`: A sequence of characters.
-        - `file`: (Currently informational) Intended for inputs representing file paths. String validation applies.
-        - `number`: (Currently informational) Intended for numerical inputs. String validation applies.
-        - `boolean`: (Currently informational) Intended for true/false inputs. String validation applies.
-        *Note: While types are declared, Dropstep currently treats all resolved variable values as strings during templating. Type information is primarily for schema validation and future enhancements.*
+    <Expandable title="properties" defaultOpen>
+        <ParamField path="name" type="string" required>
+            The unique name of the input variable. This name will be used for templating.
+        </ParamField>
+
+        <ParamField path="type" type="string" required>
+            The expected data type of the input. Valid types are:
+            - `string`: A sequence of characters.
+            - `file`: (Currently informational) Intended for inputs representing file paths. String validation applies.
+            - `number`: (Currently informational) Intended for numerical inputs. String validation applies.
+            - `boolean`: (Currently informational) Intended for true/false inputs. String validation applies.
+            *Note: While types are declared, Dropstep currently treats all resolved variable values as strings during templating. Type information is primarily for schema validation and future enhancements.*
     </ParamField>
 
     <ParamField path="required" type="boolean" default="false">
@@ -59,8 +61,8 @@ inputs:
     <ParamField path="default" type="string">
         A default value for the input variable. If the input is not provided in the varfile, this default value will be used instead. For required inputs, this prevents validation errors when no value is explicitly provided.
     </ParamField>
+    </Expandable>
 </ParamField>
-
 
 ---
 

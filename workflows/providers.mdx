@@ -1,0 +1,136 @@
+---
+title: "Providers"
+description: "Configure access to external services."
+---
+
+Certain Dropstep steps, particularly the [`browser_agent`](/workflows/steps#browser_agent), rely on external services like LLM providers (e.g., OpenAI) to function. The providers section in your `dropstep.yml` allows you to define and manage the configurations for these services.
+
+## Defining Providers
+
+The `providers` section is a top-level list in your `dropstep.yml`. Each item in the list defines a single provider configuration.
+
+<ParamField path="providers" type="object[]" required="false">
+    An optional list of provider configurations.
+    <Expandable title="properties" defaultOpen>
+        <ParamField path="name" type="string" required="true">
+            A unique, user-defined name for this specific provider configuration. This name is used by steps (e.g., in the `provider` field of a [`browser_agent`](/workflows/steps#browser_agent) step) to reference this particular setup.
+        </ParamField>
+        <ParamField path="type" type="string" required="true">
+            Specifies the type of the external provider. Currently, the primary supported type is:
+            - `openai`: For configuring OpenAI models.
+            *(Support for other provider types to be added in the future.)*
+        </ParamField>
+        <ParamField path="api_key" type="string" required="false">
+            The API key for authenticating with the provider.
+            - This field can be set to a direct API key string (not recommended for security).
+            - It can be templated to use a workflow [input variable](/workflows/inputs-varfiles) (e.g., `{{ my_openai_api_key_input }}`), which is the recommended approach for flexibility and secret management.
+            - If left empty or omitted for an `openai` provider, Dropstep will attempt to use the `OPENAI_API_KEY` environment variable as a fallback during runtime.
+        </ParamField>
+    </Expandable>
+</ParamField>
+
+## Example Configuration
+
+Here's an example that defines an OpenAI provider and uses it in a [`browser_agent`](/workflows/steps#browser_agent) step:
+
+```yaml dropstep.yml icon="file-code"
+name: "Agent Workflow with Provider"
+
+inputs:
+  - name: key_for_openai            # An input to hold the API key
+    type: string
+    required: true
+    secret: true
+
+providers:
+  - name: my_llm_service            # User-defined name
+    type: openai                    # Specifies it's an OpenAI provider
+    api_key: "{{ key_for_openai }}" # Uses the input variable
+
+steps:
+  - id: research_task
+    uses: browser_agent
+    provider: my_llm_service        # Refers to the provider defined above
+    prompt: "Research the latest trends in AI on the web."
+```
+
+```yaml dsvars.yml icon="file-code"
+key_for_openai: "{{ env.OPENAI_API_KEY }}"
+```
+
+```env .env icon="file-code"
+OPENAI_API_KEY="your-api-key"
+```
+
+## How API Keys are Resolved
+
+Dropstep offers flexibility in how API keys for providers are resolved.
+
+### 1. Direct Value in `api_key` (Least Recommended)
+
+```yaml dropstep.yml icon="file-code"
+providers:
+  - name: less_secure_openai
+    type: openai
+    api_key: "sk-thisIsARealKeyInYAML_BadPractice"
+```
+
+### 2. Templated from Workflow `inputs` (Recommended)
+
+This is the most flexible and secure approach.
+
+<Steps>
+  <Step title="Define an input and reference it in the provider's api_key field.">
+```yaml dropstep.yml icon="file-code"
+inputs:
+  - name: key_for_openai
+    type: string
+    required: true
+    secret: true
+
+providers:
+  - name: my_llm_service            
+    type: openai
+    api_key: "{{ key_for_openai }}"
+```
+  </Step>
+  <Step title="Provide a value for the input in a varfile.">
+```yaml dsvars.yml icon="file-code"
+key_for_openai: "{{ env.OPENAI_API_KEY }}"
+```
+  </Step>
+</Steps>
+
+The actual secret resides in your environment or a `.env` file. Marking the input as `secret: true` ensures the key is redacted from logs and other outputs.
+
+### 3. Fallback to Environment Variables
+
+If a provider configuration in `dropstep.yml` has its `api_key` field empty, omitted, or it resolves to an empty string, Dropstep has a fallback mechanism at runtime.
+
+<Steps>
+    <Step>
+      For `type: openai` providers, it will automatically check for an environment variable named `OPENAI_API_KEY`.
+    </Step>
+    <Step>
+      If found, this environment variable will be used. If not found (*and a step requiring this provider is run*), the workflow will fail.
+    </Step>
+</Steps>
+
+#### Example of relying on fallback
+
+```yaml dropstep.yml icon="file-code" focus={3-6}
+name: "Agent Workflow - API Key Fallback"
+
+providers:
+  - name: openai_default_key
+    type: openai
+    # No api_key field specified
+
+steps:
+  - id: browse_task
+    uses: browser_agent
+    provider: openai_default_key
+    prompt: "Visit example.com"
+```
+
+In this case, `dropstep run` would expect `OPENAI_API_KEY` to be set in the environment or a `.env` file.
