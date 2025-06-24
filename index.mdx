@@ -18,35 +18,49 @@ description: "Agents, for real this time."
   alt="Dropstep Run Dark"
 />
 
-## Dropstep?
+Dropstep is an **agentic automation framework**.
 
-Dropstep is an **agent automation framework**.
+At its core, Dropstep lets you define intelligent workflows in a declarative, human-readable YAML format. These workflows are made up of:
 
-At its core, Dropstep allows you to define intelligent workflows in a declarative, human-readable YAML format. These workflows are made up of:
-
-- **Browser automation:** Instruct an AI agent to perform tasks in a web browser, like filling forms, navigating sites, or extracting information.
+- **Browser automation:** Instruct an AI agent to perform tasks in a web browser — like filling forms, uploading files, or extracting information.
 - **Shell scripts:** Run arbitrary shell commands or scripts for system-level tasks.
-- **Python programs:** Embed Python for data processing, custom logic, or leverage specific Python libraries.
-- **HTTP requests:** Integrate with external APIs or services via HTTP requests.
+- **Python programs:** Embed Python for data processing, custom logic, or specific library use.
+- **HTTP requests:** Integrate with external APIs or services via HTTP calls.
 
 Dropstep is designed to bring structure and extensibility to your automations, emphasizing:
 
-- **Repeatability:** Define a workflow once and run it consistently, ensuring reliable outcomes.
-- **Reusability:** Powerful templating and variable functionality to run workflows with modular inputs.
-- **Declarative syntax:** Focus on *what* you want to achieve, rather than *how* to implement the low-level details.
-- **Inter-step data passing:** Seamlessly pass outputs from one step as inputs to another, creating powerful data pipelines.
-- **Secrets management:** Securely handle sensitive information like API keys through varfiles, templating, and built-in redaction in logs.
-- **Extensibility:** Easily extend built-in functionality by embedding shell and Python scripts for custom logic.
+- **Repeatability:** Define a workflow once and run it reliably every time.
+- **Reusability:** Use variables and templating to run workflows with different inputs.
+- **Declarative syntax:** Focus on *what* needs to be done, not *how* to wire it all up.
+- **Inter-step data passing:** Seamlessly hand data from one step to the next.
+- **Secrets management:** Securely handle API keys and tokens via varfiles and redacted logs.
+- **Extensibility:** Extend workflows with custom shell or Python logic when needed.
 
-Whether you're automating web interactions, orchestrating local scripts, or integrating with APIs, Dropstep provides a unified platform to build and manage your automations.
+Whether you're automating the browser, running scripts, or calling APIs — Dropstep gives you a single interface to orchestrate it all.
 
-## Vocabulary
+---
 
-To get started with Dropstep, it's helpful to understand a few core concepts:
+## Why Dropstep?
 
-- **Workflow:** This is the heart of Dropstep, defined in a `dropstep.yml` (or custom-named) YAML file.
-- **Agent:** Agents in Dropstep are autonomous task runners, often powered by LLMs, that can operate browsers, APIs, and scripts using natural language prompts and runtime context.
-- **Step:** A step is an individual unit of work within a workflow. Each step defines an intent, such as "run this shell command", "instruct the browser agent to do X", or "make a POST request to this URL". Steps are executed in the order they are defined.
-- **Runner:** Runners are modular executors behind each step type (e.g. `shell`, `browser_agent`, `http`). They define how to interpret and execute each kind of task, and can be extended to support new step types.
-- **Varfile:** Dropstep workflows support dynamic data. Variables allow you to inject configuration values into your workflow at runtime (e.g., from a separate `dsvars.yml` file or environment variables).
-- **Provider:** Providers allow you to configure access details such as API keys and other authentication information.
+Most tools for automation give you verbose scripts, brittle bots, or visual builders that don’t scale. Dropstep is different — a pluggable, declarative framework for flexible, AI-integrated automation.
+
+- **Agent-native:** Drive browser tasks with LLMs and natural-language prompts.
+- **Code-first:** Automate shell, HTTP, and Python steps in a single YAML file.
+- **Composable:** Chain logic with powerful templating and inter-step variables.
+- **CLI-first:** Designed for local development, CI/CD pipelines, and headless environments.
+- **Secure by default:** Secrets stay out of logs and workflows adapt to the environment.
+
+If you've ever duct-taped Python scripts, shell commands, and RPA bots together, Dropstep is your escape hatch.
+
+---
+
+## Dive In
+
+<CardGroup cols={2}>
+  <Card title="Quickstart" icon="rocket" href="/quickstart">
+    Install Dropstep and run your first agent workflow.
+  </Card>
+  <Card title="Workflow Definition" icon="code" href="/workflow-definition">
+    Learn the Dropstep YAML format, step types, and data passing.
+  </Card>
+</CardGroup>

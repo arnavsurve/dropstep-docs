@@ -12,7 +12,7 @@ description: 'Start building intelligent workflows in under 5 minutes'
 
 ### Install
 
-```bash
+```bash icon="terminal"
 go install github.com/arnavsurve/dropstep@latest
 ```
 
@@ -22,7 +22,7 @@ This command will fetch the latest version of Dropstep, compile it, and place th
 
 Ensure your Go binary directory is in your system's PATH. You can verify your Dropstep installation with:
 
-```bash
+```bash icon="terminal"
 dropstep --help
 ```
 
@@ -33,16 +33,16 @@ This should display the help message for the Dropstep CLI, listing available com
 
 Let's create a workflow that uses the `browser_agent` to visit [dropstep.tech](https://dropstep.tech) and tell us what it's about.
 
-You will need access to an OpenAI API key. You can get one from [OpenAI](https://openai.com/api/).
-
-### Author a Workflow
+<Note>
+  **Prerequisite:** You will need access to an OpenAI API key. You can get one from [OpenAI](https://openai.com/api/).
+</Note>
 
 Create a new directory for your workflow, let's call it `my-dropstep-intro`. Inside this directory, create the following files:
 
 
 #### `dropstep.yml`
 
-```yaml dropstep.yml
+```yaml dropstep.yml icon="file-code"
 name: Dropstep Introduction Agent
 description: An agent visits a website to find out what it is.
 
@@ -69,7 +69,7 @@ steps:
 
 #### `dsvars.yml`
 
-```yaml dsvars.yml
+```yaml dsvars.yml icon="file-code"
 openai_api_key: "{{ env.OPENAI_API_KEY }}"
 url: "https://dropstep.tech"
 ```
@@ -82,13 +82,13 @@ You still need to make your OpenAI API key available as an environment variable.
 
 1. Set it as an environment variable:
 
-```bash bash
+```bash icon="terminal"
 export OPENAI_API_KEY="your-api-key"
 ```
 
 2. Define it in a `.env` file in the same directory as your workflow:
 
-```env .env
+```env .env icon="file-code"
 OPENAI_API_KEY="your-api-key"
 ```
 
@@ -98,9 +98,18 @@ OPENAI_API_KEY="your-api-key"
 
 ### Run the Workflow
 
-Navigate to your `my-dropstep-intro` directory in your terminal and run:
+Your workflow directory should look like this:
 
-```bash bash
+```bash
+my-dropstep-intro/
+├── dsvars.yml              # Variable file
+├── dropstep.yml            # Workflow definition
+└── .env                    # Environment variables
+```
+
+Navigate to the `my-dropstep-intro` directory in your terminal and run:
+
+```bash icon="terminal"
 dropstep run
 ```
 
@@ -116,7 +125,7 @@ You should see a browser window open and navigate to `https://dropstep.tech`. Th
 
 You'll see logs similar to this:
 
-```
+```text icon="terminal"
 [INFO <timestamp>] workflow: Validating Dropstep Introduction Agent using dsvars.yml
 [INFO <timestamp>] workflow: Successfully loaded workflow: Dropstep Introduction Agent
 ...
@@ -128,10 +137,12 @@ You'll see logs similar to this:
 [INFO <timestamp>] workflow: Shutting down logger...
 ```
 
-The key part is the agent's summary message and the final JSON output, which by default contains a `summary` field with the agent's response to your prompt. This demonstrates the browser agent's ability to perform tasks in a web browser and return structured data.
+The key part is the agent's summary message and the final JSON output, which by default contains a `summary` field with the agent's response to your prompt. You can also find this output JSON in `.dropstep/output/visit_dropstep_site_output.json`. 
+
+This demonstrates the browser agent's ability to perform tasks in a web browser and return structured data.
 
 <Info>
-You can also find this output JSON in `.dropstep/output/visit_dropstep_site_output.json`. Visit the [Structured Output Guide](/structured-output) to learn more about customizing an agent's structured output format.
+Visit the [Structured Output Guide](/structured-output) to learn more about customizing an agent's structured output format.
 </Info>
 
 ## Fin

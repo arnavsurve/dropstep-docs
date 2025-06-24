@@ -1,0 +1,19 @@
+---
+title: "Metadata"
+description: "Metadata for a Dropstep workflow"
+---
+
+Each Dropstep workflow consists of identifying information at the top of the file. These come in handy for logging and identification of workflows -- either in the web platform or CLI. 
+
+<ParamField path="name" type="string" required="true">
+    The name of the workflow.
+</ParamField>
+
+<ParamField path="description" type="string" required="false">
+    A description of the workflow.
+</ParamField>
+
+```yaml dropstep.yml icon="file-code"
+name: "My Workflow"
+description: "A description of my workflow"
+```

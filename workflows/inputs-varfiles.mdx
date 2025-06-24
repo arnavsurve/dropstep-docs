@@ -1,0 +1,101 @@
+---
+title: "Inputs & Varfiles"
+description: "Define workflow inputs, provide values with a varfile, and integrate environment variables."
+---
+
+Dropstep workflows are designed to be dynamic and configurable. This is achieved by defining **workflow `inputs`**, providing their values via **varfiles**, and **environment variables**. These resolved values can then be used throughout your workflow via Dropstep's [templating system](/workflows/templating).
+
+## Defining Workflow Inputs
+
+You can declare the parameters your workflow expects using the `inputs` block in your `dropstep.yml` file. This defines a contract for what data your workflow consumes at runtime.
+
+```yaml dropstep.yml icon="file-code" focus={4-22}
+name: "User Processing Workflow"
+description: "Processes user data from an API and a local file."
+
+inputs:
+  - name: user_id
+    type: string
+    required: true
+
+  - name: api_endpoint
+    type: string
+    required: true
+    default: "https://api.example.com/users"
+
+  - name: api_key
+    type: string
+    required: true
+    secret: true
+
+  - name: data_file_path
+    type: file
+    required: false
+```
+
+<ParamField path="inputs" type="object[]">
+    An optional list of input variable definitions.
+    <ParamField path="name" type="string" required>
+        The unique name of the input variable. This name will be used for templating (e.g., `{{ my_input_name }}`).
+    </ParamField>
+
+    <ParamField path="type" type="string" required>
+        The expected data type of the input. Valid types are:
+        - `string`: A sequence of characters.
+        - `file`: (Currently informational) Intended for inputs representing file paths. String validation applies.
+        - `number`: (Currently informational) Intended for numerical inputs. String validation applies.
+        - `boolean`: (Currently informational) Intended for true/false inputs. String validation applies.
+        *Note: While types are declared, Dropstep currently treats all resolved variable values as strings during templating. Type information is primarily for schema validation and future enhancements.*
+    </ParamField>
+
+    <ParamField path="required" type="boolean" default="false">
+        If `true`, Dropstep will ensure a value is provided for this input (either via `dsvars.yml` or an environment variable that `dsvars.yml` references). The workflow will fail validation if a required input is missing.
+    </ParamField>
+
+    <ParamField path="secret" type="boolean" default="false">
+        If `true`, Dropstep will attempt to redact the resolved value of this input variable from all log outputs (both console and file logs) by replacing it with `********`. This is crucial for handling API keys, passwords, or other sensitive data.
+    </ParamField>
+
+    <ParamField path="default" type="string">
+        A default value for the input variable. If the input is not provided in the varfile, this default value will be used instead. For required inputs, this prevents validation errors when no value is explicitly provided.
+    </ParamField>
+</ParamField>
+
+
+---
+
+## Providing Input Values with `dsvars.yml`
+
+Provide values for the `inputs` you've defined with a YAML file (commonly named `dsvars.yml`) in the same directory as your workflow.
+
+`dsvars.yml` is a simple key-value YAML file where keys correspond to the `name` of an input defined in your workflow.
+
+```yaml dsvars.yml icon="file-code"
+user_id: "user123"
+api_endpoint: "https://test.api.example.com/users" # Overrides the default in dropstep.yml
+api_key: "{{ env.MY_SERVICE_API_KEY }}"            # Uses an environment variable
+data_file_path: "./input_data/user_data.csv"
+```
+
+<Note>
+    Dropstep by default looks for a file named `dsvars.yml`. You can override this by using the `--varfile` flag.
+</Note>
+
+### Using Environment Variables within `dsvars.yml`
+
+As seen with `api_key` in the example above, `dsvars.yml` supports a special templating syntax `{{ env.VARIABLE_NAME }}`. When Dropstep processes the varfile:
+
+1. It looks for an environment variable named `VARIABLE_NAME`.
+2. This first checks the **environment variables in the current shell**.
+3. If not found, and a `.env` file exists in the workflow directory, Dropstep **loads variables from the `.env` file**.
+4. The value of `{{ env.VARIABLE_NAME }}` is then replaced with the variable's value (or an empty string if not found, with a warning logged).
+
+This is the idiomatic way to handle secrets: define them in your environment or a `.env` file, and reference them in `dsvars.yml`.
+
+```env .env icon="file-code"
+MY_SERVICE_API_KEY="supersecretapikey12345"
+```
+
+---
+
+With your inputs defined and values provided, the next step is to learn how to use these variables within your workflow steps using Dropstep's [templating system](/workflows/templating).

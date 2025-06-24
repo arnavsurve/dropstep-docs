@@ -17,19 +17,32 @@
             "group": "Get Started",
             "pages": [
               "index",
-              "quickstart",
-              "development"
+              "quickstart"
             ]
           },
           {
-            "group": "Essentials",
+            "group": "Guides",
             "pages": [
-              "essentials/markdown",
-              "essentials/code",
-              "essentials/images",
-              "essentials/settings",
-              "essentials/navigation",
-              "essentials/reusable-snippets"
+              "guides/hello-world"
+            ]
+          },
+          {
+            "group": "Workflows",
+            "pages": [
+              "workflows/overview",
+              "workflows/metadata",
+              "workflows/variables",
+              "workflows/templating",
+              "workflows/providers",
+              "workflows/steps"
+            ]
+          },
+          {
+            "group": "CLI Reference",
+            "pages": [
+              "cli-reference/lint",
+              "cli-reference/run",
+              "cli-reference/directory-structure"
             ]
           }
         ]
@@ -82,14 +95,15 @@
   "navbar": {
     "links": [
       {
-        "label": "Support",
-        "href": "mailto:arnav@graceinfra.org"
+        "label": "",
+        "href": "https://github.com/arnavsurve/dropstep",
+        "icon": "github"
       }
     ],
     "primary": {
       "type": "button",
       "label": "Dashboard",
-      "href": "https://dashboard.mintlify.com"
+      "href": "https://platform.dropstep.tech"
     }
   },
   "footer": {

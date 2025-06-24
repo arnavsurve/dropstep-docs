@@ -1,0 +1,164 @@
+---
+title: "Templating"
+description: "Use Dropstep's templating system to inject dynamic data into your workflows."
+---
+
+Dropstep features a powerful yet simple templating system that allows you to make your workflows **dynamic** and **reusable**. By embedding expressions within the `{{ ... }}` syntax, you can inject values from various sources directly into your steps such as prompts, login credentials, URLs, and more.
+
+## Syntax
+
+The basic syntax for a template expression is:
+
+```yaml icon="file-code"
+{{ expression }}
+```
+
+## Variable Sources
+
+When Dropstep encounters a `{{ expression }}` in a string field, it attempts to resolve the expression by looking for its value in the following sources in the following order:
+
+### 1. Step Outputs
+The results of upstream steps are available to downstream steps. This is key for chaining operations and passing data through your workflow.
+    
+#### Primary Output Syntax
+`{{ steps.<step_id>.output }}` 
+    
+#### Output Types
+    - [`shell`](/workflows/steps#shell)/[`python`](/workflows/steps#python): The entire trimmed STDOUT. If this string is valid JSON, `output` is parsed into a map/object; otherwise, it's treated as a raw string.
+    - [`http`](/workflows/steps#http): An object containing `status_code`, `headers` (map), and `body` (parsed JSON, string, or base64).
+    - [`browser_agent`](/workflows/steps#browser_agent): An object based on the step's `output_schema` or the default `{"summary": "string"}` structure.
+    
+#### Accessing Nested Fields
+If a step's `output` is an object (e.g., JSON), you can access its nested fields using dot notation.
+    
+#### Syntax
+`{{ steps.<step_id>.output.<field>.<subfield> }}`
+    
+#### Example
+```yaml dropstep.yml icon="file-code" focus={13-18}
+inputs:
+  - name: user_id_input
+    type: string
+    required: true
+
+steps:
+  - id: get_user_info
+    uses: http
+    call:
+      method: GET
+      url: "https://api.example.com/users/{{ user_id_input }}"
+
+  - id: display_user_name
+    uses: shell
+    run:
+      # Assuming the API returns JSON like: { "id": 1, "name": "Jane Doe", "email": "..." }
+      inline: |
+        echo "User's name is: {{ steps.get_user_info.output.body.name }}"
+```
+
+### 2. Workflow `inputs` (Global Variables)
+Variables defined in the `inputs` block of your `dropstep.yml` and populated via `dsvars.yml` are available globally. See [Inputs & Varfiles](/workflows/inputs-varfiles) for details.
+
+#### Syntax 
+- `{{ input_name }}`
+    
+#### Example
+```yaml dropstep.yml icon="file-code" focus={1-3,8}
+inputs:
+  - name: target_url
+    type: string
+    
+steps:
+  - id: browse_site
+    uses: browser_agent
+    prompt: "Go to {{ target_url }} and summarize the page."
+```
+    
+And in `dsvars.yml`:
+```yaml dsvars.yml icon="file-code"
+target_url: "https://example.com"
+```
+
+The prompt becomes: `"Go to https://example.com and summarize the page."`
+
+### 3. Step Output File Path
+For steps that write their results to a file (primarily [`browser_agent`](/workflows/steps#browser_agent) which saves its structured JSON output), you can reference the path to this output file.
+    
+#### Syntax
+- `{{ steps.<step_id>.output_file }}`
+    
+#### Example
+```yaml dropstep.yml icon="file-code" focus={6-12}
+steps:
+  - id: agent_analysis
+    uses: browser_agent
+    prompt: "Analyze the sentiment of the text on the page."
+    output_schema: "./schemas/sentiment_schema.json"
+
+  - id: log_agent_output_path
+    uses: shell
+    run:
+      # This will echo the path "output/agent_analysis_output.json"
+      inline: |
+        echo "Agent output saved to: {{ steps.agent_analysis.output_file }}"
+```
+
+### 4. `browser_agent` Upload Files 
+When using `upload_files` in a [`browser_agent`](/workflows/steps#browser_agent) step, the `name` you assign to a file becomes a template variable within that step. It resolves to the *basename* of the file's path.
+    
+#### Syntax
+- `{{ file_upload_name }}`
+    
+#### Example
+```yaml dropstep.yml icon="file-code" focus={9-13}
+inputs:
+  - name: url
+    type: string
+    required: true
+
+steps:
+  - id: submit_application
+    uses: browser_agent
+    upload_files:
+      - name: resume_doc
+        path: "/path/to/my_document_v2.pdf"
+    prompt: |
+        "Go to {{ url }}, fill in the details, and upload '{{ resume_doc }}' to the resume field."
+```
+
+Here, `{{ resume_doc }}` will resolve to `my_document_v2.pdf`. The *absolute path* is constructed by the Dropstep engine and provided to the browser agent at runtime.
+
+## JSON Output Serialization
+
+If a variable you are templating holds a complex data structure (like a map or array), you can get its JSON representation by appending `.json` to the expression.
+
+### Syntax
+- `{{ some_variable.json }}`
+- `{{ steps.<id>.output.json }}`
+- `{{ steps.<id>.output_file.json }}`
+
+This is useful for passing structured data as a single string argument to scripts or within API call bodies that expect stringified JSON.
+
+### Example
+```yaml dropstep.yml icon="file-code"
+steps:
+  - id: get_structured_data
+    uses: python
+    run:
+      inline: |
+        import json; 
+        print(json.dumps({"key": "value", "items": [1, 2]}))
+
+  - id: use_as_string
+    uses: shell
+    run:
+      # {{ steps.get_structured_data.output.json }} becomes '{"key": "value", "items": [1, 2]}'
+      inline: |
+        ./process_json.sh --payload '{{ steps.get_structured_data.output.json }}'
+```
+
+## Variable Resolution Considerations
+
+**Undefined variables:** If a tempalte `{{ expression }}` cannot be resolved, an error will be logged, and the step requiring the variable will likely fail. The unresolved `{{ expression }}` placeholder may remain in the string.
+
+**String conversion:** The templating system primarily replaces placeholders with their string representations. For the `.json` suffix, complex types are first marshaled into a JSON string.
