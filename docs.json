@@ -23,7 +23,8 @@
           {
             "group": "Guides",
             "pages": [
-              "guides/hello-world"
+              "guides/hello-world",
+              "guides/deployment-ci"
             ]
           },
           {
