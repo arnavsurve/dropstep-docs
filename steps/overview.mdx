@@ -1,0 +1,25 @@
+---
+title: "Overview"
+description: "Explore the different types of steps available to build your workflows."
+---
+
+The `steps` block is the core of your workflow. It defines the sequence of actions your workflow will execute. Steps are self-contained units of behavior and are executed in the order they are defined.
+
+Dropstep provides several built-in step modules, each designed for a particular kind of operation. You can chain these steps together, passing data from one to the next, to create complex and functional automations.
+
+## Available Step Modules
+
+<CardGroup cols={2}>
+    <Card title="Browser Agent" icon="robot" href="/steps/browser-agent">
+        Perform tasks in a web browser using an LLM-powered agent. Ideal for web scraping, form filling, and complex site interactions.
+    </Card>
+    <Card title="Shell" icon="terminal" href="/steps/shell">
+        Execute shell commands or scripts. Useful for system-level tasks, file manipulation, and running existing shell utilities.
+    </Card>
+    <Card title="Python" icon="python" href="/steps/python">
+        Run Python scripts or inline Python code. Leverage Python's extensive libraries for data processing, custom logic, and more.
+    </Card>
+    <Card title="HTTP" icon="globe" href="/steps/http">
+        Make HTTP API calls to interact with external services and web APIs. Supports various methods, headers, and request bodies.
+    </Card>
+</CardGroup>

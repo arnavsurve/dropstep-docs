@@ -1,0 +1,280 @@
+---
+title: "Browser Agent"
+description: "Automate the web with an LLM-powered browser agent."
+icon: "robot"
+---
+
+The `browser_agent` step is one of Dropstep's most powerful features, allowing you to instruct an LLM-powered agent to perform tasks in a web browser. This is ideal for complex web scraping, form filling, file upload/download, and any task requiring flexible interaction with web UIs.
+
+Under the hood, this utilizes the [Playwright](https://playwright.dev/) library to control a browser, and [browser-use](https://browser-use.com/) to interpret your instructions.
+
+## Usage
+
+To use the `browser_agent` step, set the `uses` field to `browser_agent`.
+
+<ParamField path="uses" type="string" required>
+    Must be set to `browser_agent`.
+</ParamField>
+<ParamField path="provider" type="string" required>
+    The name of a [provider](/workflows/providers) (defined in the top-level `providers` section of your workflow) that the agent will use for its LLM interactions.
+</ParamField>
+<ParamField path="max_failures" type="integer" default="3">
+    The maximum number of consecutive failures (e.g., LLM errors, action errors) the agent can encounter before the entire step is marked as failed.
+</ParamField>
+<ParamField path="browser" type="object" required>
+    Contains all browser-specific configurations for the agent.
+
+    <Info>
+       Every field besides `upload_files.name` can be [templated](/workflows/templating). 
+    </Info>
+
+    <Expandable title="properties" defaultOpen>
+        <ParamField path="prompt" type="string" required>
+            The natural language instruction for the agent. This prompt guides the LLM in determining what actions to take in the browser.
+        </ParamField>
+        <ParamField path="upload_files" type="object[]">
+            A list of files to make available for the agent to upload during its browser session. Each object in the list defines a file:
+        <Expandable title="properties">
+            <ParamField path="name" type="string" required>
+                A short, descriptive name for the file. This name becomes a [template variable](/workflows/templating#4-browseragent-upload-file-basenames) (e.g., `{{ my_resume }}`). This allows you to dynamically reference this file in the agent's `prompt`.
+            </ParamField>
+            <ParamField path="path" type="string" required>
+                The path to the file on your local system. This can be an absolute path or a path relative to your workflow file.
+            </ParamField>
+        </Expandable>
+    </ParamField>
+    <ParamField path="download_dir" type="string">
+        The local directory path where files downloaded by the browser agent should be saved.
+        - If not specified, downloads will go to a default directory: `.dropstep/output/<step_id>_default_downloads/`.
+        - Paths are resolved relative to the workflow file if not absolute.
+        - The agent must be explicitly prompted to perform a download action.
+    </ParamField>
+    <ParamField path="output_schema" type="string">
+        Path to a JSON schema file (e.g., `./schemas/my_schema.json`).
+        - If provided, the agent will attempt to structure its final output according to this schema. This is **highly recommended** for extracting specific, structured data.
+        - The path is resolved relative to the workflow file if not absolute.
+        - If omitted, the agent's output will be a simple JSON summary object: `{"summary": "The agent's text summary of its actions or findings."}`.
+    </ParamField>
+    <ParamField path="allowed_domains" type="string[]">
+        An optional list of internet domains (e.g., `["example.com", "another.org"]`) that the agent is permitted to navigate to. If specified, the agent **cannot** visit URLs outside these domains.
+    </ParamField>
+    <ParamField path="max_steps" type="integer" default="100">
+        The maximum number of browser actions (e.g., clicks, typing, navigations) the agent can take. This helps prevent excessively long runs or infinite loops.
+    </ParamField>
+    <ParamField path="data_dir" type="string">
+        Path to a browser user data directory. If specified, the agent's browser instance will attempt to use this directory for cookies, cache, local storage, etc. This can allow the agent to operate as if logged into websites or resume sessions.
+        - **Use with caution:** Managing browser data directories can be complex. Ensure the path is correct and accessible. An incorrect or corrupted data directory can cause the browser to fail to launch.
+        - Example: `~/Library/Application Support/Google/Chrome` (macOS Chrome default profile). Path format and availability vary by OS and browser.
+        </ParamField>
+    </Expandable>
+</ParamField>
+
+## Structured Output
+
+One of the **most powerful** features of the browser agent is its ability to return structured data. By providing a JSON schema file via the `browser.output_schema` parameter, you can instruct the LLM to format its output according to your defined structure.
+
+### Why use an output schema?
+
+<AccordionGroup>
+    <Accordion title="Reliable Data Extraction" icon="shield-check">
+        Instead of relying on the agent to summarize information in free-form text within the default `{"summary": "..."}` output, you can specify the exact **type-safe** fields you need.
+    </Accordion>
+    <Accordion title="Easy Downstream Processing" icon="arrow-down">
+        The `{{ steps.<step_id>.output }}` variable will directly give you a parsed JSON object matching your schema, making it simple to consume in subsequent steps.
+    </Accordion>
+    <Accordion title="Complex Information Gathering" icon="brackets-curly">
+        Define schemas to extract multiple pieces of related information (e.g., product name, price, description, etc.). This can be an array of objects, allowing you to extract multiple items from a single page or across multiple pages.
+    </Accordion>
+</AccordionGroup>
+
+### How it works
+
+<Steps>
+    <Step title="Create a JSON schema file">
+        Define your desired output structure using standard [JSON Schema](https://json-schema.org/) syntax. Save this as a `.json` file (e.g., `./schemas/product_details.json`).
+
+        ```json schemas/product_details.json icon="file-code"
+        {
+          "title": "ProductInformation",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "productName": { 
+                  "type": "string", 
+                  "description": "The full name of the product." 
+                 },
+              "price": { 
+                  "type": "number", 
+                  "description": "The listed price of the product." 
+                 },
+              "inStock": { 
+                  "type": "boolean", 
+                  "description": "Whether the product is currently in stock." 
+                 },
+              "features": {
+                "type": "array",
+                "items": { "type": "string" },
+                "description": "A list of key features."
+              }
+            },
+            "required": ["productName", "price"]
+          }
+        }
+        ```
+    </Step>
+    <Step title="Reference it in your step">
+        ```yaml dropstep.yml icon="file-code"
+        steps:
+          - id: get_product_info
+            uses: browser_agent
+            provider: my_openai_provider
+            browser:
+              prompt: "Go to the product page at {{ product_url }} and extract details for the first 10 products: name, price, stock status, and key features."
+              output_schema: "./schemas/product_details.json"
+        ```
+    </Step>
+    <Step title="Consume the structured JSON output">
+        As an example, we can use this in the body of an [`http`](/steps/http) step to send the product details to an API endpoint.
+    
+        ```yaml dropstep.yml icon="file-code"
+        inputs:
+          - name: api_endpoint_for_products
+            type: string
+            required: true
+    
+        steps:
+          - id: get_product_info
+            uses: browser_agent
+            # ...
+
+          - id: send_products_to_api
+            uses: http
+            call:
+              method: POST
+              url: "{{ api_endpoint_for_products }}/ingest-batch"
+              headers:
+                Content-Type: "application/json"
+                X-Auth-Token: "{{ my_api_token }}"
+              body: 
+                products_payload: "{{ steps.get_product_info.output }}"
+
+            # The resulting JSON body sent would be:
+            # {
+            #   "products_payload": [
+            #     { "productName": "Laptop Pro", "price": 1299.99, ... },
+            #     { "productName": "Wireless Mouse", "price": 25.50, ... },
+            #     ...
+            #   ]
+            # }
+        ```
+
+        <Info>
+           See the [HTTP step documentation](/steps/http) for more information on this step module. 
+        </Info>
+    </Step>
+
+</Steps>
+
+### Tips for effective output schemas
+
+- **Be specific in prompts:** Even with a schema, guide the LLM in your `prompt` about *what information to look for*.
+- **Use descriptions:** Add `description` fields within your schema. The agent uses these to understand the intent of each field.
+
+## Accessing Agent Output
+
+The `browser_agent` step provides its output in two ways, accessible via [templating](/workflows/templating#3-step-output-file-path) in subsequent steps:
+
+1. `{{ steps.<step_id>.output }}`
+    - This is a parsed JSON object.
+    - If an `output_schema` was provided, the structure of this object will conform to that schema.
+    - If no `output_schema` was provided, it will be a simple JSON summary object: `{"summary": "The agent's text summary."}`.
+    - This is useful for providing structured output of a browser agent to subsequent steps.
+
+2. `{{ steps.<step_id>.output_file }}`
+    - This is a string representing the path to a JSON file where the raw JSON output of the agent is saved. This file is located in the `.dropstep/output/` directory (e.g. `.dropstep/output/<step_id>_output.json`).
+    - This can be useful for debugging or when you need the structured output of a browser agent as a file.
+
+## Agent Operation
+
+<AccordionGroup>
+    <Accordion title="Python Environment" icon="python">
+        On your first time running a workflow with a `browser_agent` step, Dropstep will set up a dedicated Python virtual environment in the user cache directory. Subsequent runs will reuse this environment unless dependencies change, making them faster.
+    </Accordion>
+
+    <Accordion title="Browser Interaction" icon="globe">
+        The agent uses Playwright to constrol a browser (typically Chromium by default, unless `data_dir` implies a different compatible browser).
+    </Accordion>
+    <Accordion title="Custom Actions" icon="robot">
+        The underlying `browser-use` agent has built-in actions for common tasks like clicking, typing, navigating, and also custom Dropstep actions for file uploads, downloads, ad closing, and more. The LLM chooses these actions based on your prompt and the current web page state.
+    </Accordion>
+</AccordionGroup>
+
+## Examples
+
+### 1. Basic web navigation and summarization
+
+```yaml dropstep.yml icon="file-code"
+name: "Simple Web Summary"
+inputs:
+  - name: site_url
+    type: string
+    default: "https://dropstep.dev"
+  - name: openai_api_key
+    type: string
+    secret: true
+
+providers:
+  - name: openai_chat
+    type: openai
+    api_key: "{{ openai_api_key }}"
+
+steps:
+  - id: summarize_site
+    uses: browser_agent
+    provider: openai_chat
+    browser:
+      prompt: "Go to {{ site_url }} and provide a brief summary of its main content."
+```
+
+### 2. File upload and download with structured output
+
+```yaml dropstep.yml icon="file-code"
+name: "File Operations Demo"
+
+inputs:
+  - name: openai_api_key
+    type: string
+    secret: true
+  - name: resume_file_path
+    type: string
+    default: "./resume.pdf"
+  - name: download_target_url
+    type: string
+    default: "https://some-legacy-crm.com"
+
+providers:
+  - name: my_openai_provider
+    type: openai
+    api_key: "{{ openai_api_key }}"
+
+steps:
+  - id: upload_and_download_agent
+    uses: browser_agent
+    provider: my_openai_provider
+    max_failures: 2
+    browser:
+      download_dir: "./downloaded_reports/"
+      output_schema: "./schemas/file_op_schema.json"
+      allowed_domains: ["internal-file-server.com", "feedbackportal.com"]
+      max_steps: 50
+      prompt: |
+        Go to {{ download_target_url }}.
+        First, download the file named 'report.pdf'.
+        Then, find the form to submit feedback, fill it with 'Test feedback',
+        and upload the document '{{ my_resume_doc }}' as an attachment.
+        Confirm the download and upload actions.
+      upload_files:
+        - name: my_resume_doc
+          path: "{{ resume_file_path }}"
+```

@@ -11,7 +11,7 @@
   "navigation": {
     "tabs": [
       {
-        "tab": "Guides",
+        "tab": "Documentation",
         "groups": [
           {
             "group": "Get Started",
@@ -34,8 +34,17 @@
               "workflows/metadata",
               "workflows/inputs-varfiles",
               "workflows/templating",
-              "workflows/providers",
-              "workflows/steps"
+              "workflows/providers"
+            ]
+          },
+          {
+            "group": "Step Modules",
+            "pages": [
+              "steps/overview",
+              "steps/browser-agent",
+              "steps/shell",
+              "steps/python",
+              "steps/http"
             ]
           },
           {
@@ -104,7 +113,7 @@
     "primary": {
       "type": "button",
       "label": "Dashboard",
-      "href": "https://platform.dropstep.tech"
+      "href": "https://platform.dropstep.dev"
     }
   },
   "footer": {

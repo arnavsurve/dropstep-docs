@@ -1,0 +1,149 @@
+---
+title: "Shell"
+description: "Execute shell commands or scripts."
+icon: "terminal"
+---
+
+The `shell` step allows you to execute arbitrary shell commands or scripts as part of your workflow. This is useful for system-level tasks, file manipulation, running existing command-line utilities, or any operation best performed via a shell interface.
+
+## Usage
+
+To use the `shell` step, set the `uses` field to `shell` and provide command or script details under the `run` key.
+
+```yaml dropstep.yml icon="file-code"
+steps:
+  - id: my_shell_command
+    uses: shell
+    run:
+      interpreter: "/bin/zsh" # Optional: Specify a custom shell interpreter
+      inline: "echo 'Hello from an inline shell command!'"
+```
+
+## Configuration Fields
+
+<ParamField path="uses" type="string" required>
+    Must be set to `shell`.
+</ParamField>
+{/* <ParamField path="timeout" type="string">
+    An optional duration string (e.g., `"30s"`, `"1m"`) specifying a timeout for the script's execution. If the script runs longer, it will be terminated.
+</ParamField> */}
+<ParamField path="run" type="object" required>
+    Defines the command or script to be executed. You must specify *either* `inline` *or* `path`.
+    <Expandable title="properties" defaultOpen>
+        <ParamField path="inline" type="string">
+            A string containing the shell script/commands to execute directly. Exclusive with `path`. For longer or more complex scripts, using the `path` field is recommended for better readability and maintainability.
+            <Note>
+                 Inline scripts automatically have `set -euo pipefail` prepended for safer execution.
+            </Note>
+        </ParamField>
+        <ParamField path="path" type="string">
+            The path to a script file to execute. Exclusive with `inline`. This can be an absolute path or a path relative to your workflow file.
+        </ParamField>
+        <ParamField path="interpreter" type="string" default="/bin/bash">
+            Optional. The interpreter to use for executing the script (e.g., `/bin/bash`, `/bin/sh`, `/usr/bin/zsh`). Dropstep will validate that the specified interpreter is a valid command during the linting phase.
+        </ParamField>
+    </Expandable>
+</ParamField>
+
+<Info>
+    All fields within `run` support [templating](/workflows/templating).
+</Info>
+
+## Handling Output
+
+The `shell` step captures the standard output (STDOUT) and standard error (STDERR) of the executed command or script.
+
+**Logging:** Both STDOUT and STDERR lines are streamed to Dropstep logs during execution.
+
+**Step Output `{{ steps.<step_id>.output }}`:** 
+    - The entire trimmed content written to STDOUT by the script is available as the step's primary output. 
+    - If this STDOUT content is a valid JSON string, Dropstep will automatically parse it into a map/object structure. You can then access its fields using dot notation in [templates](/workflows/templating) (e.g., `{{ steps.my_script.output.json_key }}`).
+    - If the STDOUT content is not valid JSON, it is treated as a single raw string. You can access it as `{{ steps.my_script.output }}`.
+
+**Exit Codes:** If the script exits with a non-zero status code, the `shell` step will fail, and the workflow execution will halt. (Advanced error handling like conditional retries or skipping is not yet implemented.)
+
+## Examples
+
+### 1. Simple inline command
+
+```yaml dropstep.yml icon="file-code"
+steps:
+  - id: echo_date
+    uses: shell
+    run:
+      inline: "echo Today is $(date)"
+```
+
+`{{ steps.echo_date.output }}` would be a string like `"Today is Tue Jul 16 10:30:00 PDT 2024"`.
+
+### 2. Running a script file that outputs JSON
+
+<Tabs>
+    <Tab title="Script file">
+        ```bash scripts/my_data_processor.sh icon="file-code"
+        #!/bin/bash
+        # This script takes a name as an argument and outputs JSON
+
+        NAME_ARG=$1
+
+        # Log to STDERR
+        echo "Processing data for $NAME_ARG..." >&2
+
+        # This is exposed as the step's output
+        echo "{\"user\": \"$NAME_ARG\", \"status\": \"processed\", \"timestamp\": \"$(date +%s)\"}"
+        ```
+    </Tab>
+    <Tab title="Dropstep workflow">
+        ```yaml dropstep.yml icon="file-code"
+        inputs:
+          - name: user_name
+            default: "DefaultUser"
+
+        steps:
+          - id: process_user_script
+            uses: shell
+            run:
+              # Pass input as argument
+              path: "./scripts/my_data_processor.sh {{ user_name }}"
+        ```
+    </Tab>
+</Tabs>
+
+Here, `{{ steps.process_user_script.output }}` would be a JSON object like:
+
+```json
+{
+  "user": "DefaultUser",
+  "status": "processed",
+  "timestamp": "1690000000"
+}
+```
+
+You could then access `{{ steps.process_user_script.output.status }}` in a subsequent step.
+
+### 3. Templating and custom interpreter
+
+```yaml dropstep.yml icon="file-code"
+inputs:
+  - name: target_directory
+    default: "/tmp/dropstep_output"
+
+steps:
+  - id: list_files
+    uses: shell
+    run:
+      interpreter: /bin/zsh # Using zsh instead of the default bash
+      inline: "mkdir -p {{ target_directory }} && ls -l {{ target_directory }}"
+```
+
+Here, `{{ steps.list_files.output }}` would be a string containing the output of `ls -l`.
+
+## Security Note (`set -euo pipefail`)
+
+For `inline` scripts, Dropstep automatically prepends `set -euo pipefail` before executing the script. This standard shell practice helps in writing safer scripts:
+
+- `set -e`: Exit immediately if a command exits with a non-zero status.
+- `set -u`: Treat unset variables as an error and exit.
+- `set -o pipefail`: Exit if any command in a pipeline fails.
+
+For scripts executed via `path`, it's recommended to include these settings (or similar error handling) at the beginning of your script file.

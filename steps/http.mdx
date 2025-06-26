@@ -1,0 +1,163 @@
+---
+title: "HTTP"
+description: "Make HTTP requests to interact with external services and web APIs."
+icon: "globe"
+---
+
+Dropstep ships with a built-in HTTP client that allows your workflows to interact with external services and web APIs. You can perform requests like fetching data (GET), submitting data (POST, PUT), or any other standard HTTP method.
+
+## Usage
+
+To use the `http` step, set the `uses` field to `http` and provide request details under the `call` key.
+
+```yaml dropstep.yml icon="file-code"
+steps:
+  - id: create_resource
+    uses: http
+    call:
+      method: POST
+      url: "https://api.example.com/resources"
+      headers:
+        Content-Type: "application/json"
+      body:
+        name: "New Resource"
+        value: "{{ dynamic_value_from_input }}"
+```
+
+## Configuration Fields
+
+<ParamField path="uses" type="string" required="true">
+    Must be set to `http`.
+</ParamField>
+<ParamField path="timeout" type="string" default="30s">
+    An optional duration string (e.g., `"10s"`, `"1m"`) specifying a timeout for the entire HTTP request-response cycle. If the request takes longer, it will be terminated. **Supports [templating](/workflows/templating).**
+</ParamField>
+<ParamField path="call" type="object" required="true">
+    Defines the details of the HTTP request to be made.
+    <Expandable title="properties" defaultOpen>
+        <ParamField path="method" type="string" required="true">
+            The HTTP method to use (e.g., `GET`, `POST`, `PUT`, `DELETE`, `PATCH`, `HEAD`, `OPTIONS`). Case-insensitive, but typically uppercase.
+        </ParamField>
+        <ParamField path="url" type="string" required="true">
+            The fully qualified URL to send the request to.
+        </ParamField>
+        <ParamField path="headers" type="map_string_string">
+            Optional. A map of key-value pairs representing the HTTP headers to include in the request.
+            - Example: `Content-Type: "application/json"`
+        </ParamField>
+        <ParamField path="body" type="map_string_any">
+            Optional. A map representing the request body, typically used with methods like `POST`, `PUT`, or `PATCH`.
+            - Dropstep will automatically marshal this map into a JSON string and set the `Content-Type` header to `application/json` if not already specified.
+            - Values within the body map can be complex (nested maps, arrays) and will be correctly marshaled.
+        </ParamField>
+    </Expandable>
+</ParamField>
+
+<Info>
+    The `url` and all values within `headers` and `body` support [templating](/workflows/templating).
+</Info>
+
+## Handling Output
+
+The `http` step provides detailed information about the HTTP response as its output.
+
+### Logging
+
+Request details (method, URL, headers, and a preview of the body) are logged before the request is sent. Sensitive information in logs is subject to [redaction](/workflows/inputs-varfiles#param-secret) if it originates from a `secret` input.
+
+Response details (status code, headers, and a preview of the body) are logged upon receiving the response.
+
+### Step Output `{{ steps.<step_id>.output }}`
+
+The output is a structured map containing the following fields:
+
+<ResponseField name="status_code" type="int">
+    The HTTP status code of the response.
+</ResponseField>
+<ResponseField name="headers" type="map[string]string">
+    A map of key-value pairs representing the response headers.
+</ResponseField>
+<ResponseField name="body" type="any">
+    The response body.
+    - If the response `Content-Type` indicated JSON and the body is valid JSON, it is parsed into a map/object or array.
+    - If it's not JSON but is a valid UTF-8 string, it is treated as a string.
+    - Otherwise, it is base64 encoded and a warning is logged.
+</ResponseField>
+
+### Error Handling
+
+- Network errors (e.g., connection refused, DNS lookup failure) will cause the step to fail.
+- Timeouts will cause the step to fail.
+- Non-2xx HTTP status codes (e.g., 4xx client errors, 5xx server errors) do **not** automatically fail the step. The `status_code` and `body` in the output will reflect the error response from the server. You can then use [templating](/workflows/templating) to unpack and handle these responses.
+
+## Examples
+
+### 1. Simple GET request
+
+```yaml dropstep.yml icon="file-code"
+inputs:
+  - name: item_id
+    default: "1"
+
+steps:
+  - id: get_item
+    uses: http
+    call:
+      method: GET
+      url: "https://jsonplaceholder.typicode.com/todos/{{ item_id }}"
+```
+
+**Output:**
+
+| Field | Example value |
+| ----- | ------- |
+| `{{ steps.get_item.output.status_code }}` | `200` |
+| `{{ steps.get_item.output.body.title }}` | `delectus aut autem` |
+| `{{ steps.get_item.output.headers.Content-Type }}` | `application/json; charset=utf-8` |
+
+### 2. POST request with JSON body
+
+```yaml dropstep.yml icon="file-code"
+inputs:
+  - name: post_title
+    default: "My Dropstep Post"
+  - name: user_identifier
+    default: "77"
+
+steps:
+  - id: create_new_post
+    uses: http
+    timeout: "20s" # Custom timeout
+    call:
+      method: POST
+      url: "https://jsonplaceholder.typicode.com/posts"
+      headers:
+        X-Client-ID: "dropstep-docs-example"
+      body:
+        title: "{{ post_title }}"
+        body: "This is a test post created by a Dropstep workflow."
+        userId: "{{ user_identifier }}"
+```
+
+**Output:**
+
+| Field | Example value |
+| ----- | ------- |
+| `{{ steps.create_new_post.output.status_code }}` | `201` |
+| `{{ steps.create_new_post.output.body.id }}` | `7e78a3bb` (The ID of the newly created post) |
+
+### 3. Using output from an upstream step
+
+```yaml dropstep.yml icon="file-code"
+steps:
+  - id: fetch_initial_data
+    uses: shell
+    run:
+      inline: 'echo "{\"search_term\": \"dropstep automation\"}"'
+
+  - id: search_api
+    uses: http
+    call:
+      method: GET
+      url: "https://api.example.com/search?query={{ steps.fetch_initial_data.output.search_term }}"
+```

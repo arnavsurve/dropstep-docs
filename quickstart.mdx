@@ -1,6 +1,7 @@
 ---
 title: 'Quickstart'
 description: 'Build your first agentic workflow in under 5 minutes.'
+icon: "rocket"
 ---
 
 ## Installation
@@ -31,7 +32,7 @@ This should display the help message for the Dropstep CLI, listing available com
 
 ## Your First Workflow
 
-Let's create a workflow that uses the `browser_agent` to visit [dropstep.tech](https://dropstep.tech) and tell us what it's about.
+Let's create a workflow that uses the `browser_agent` to visit [dropstep.dev](https://dropstep.dev) and tell us what it's about.
 
 <Note>
   **Prerequisite:** You will need access to an OpenAI API key. You can get one from [OpenAI](https://openai.com/api/).
@@ -71,7 +72,7 @@ steps:
 
 ```yaml dsvars.yml icon="file-code"
 openai_api_key: "{{ env.OPENAI_API_KEY }}"
-url: "https://dropstep.tech"
+url: "https://dropstep.dev"
 ```
 
 This tells Dropstep to get the values for the `openai_api_key` and `url` input variables. The `{{ env.* }}` syntax tells Dropstep to resolve the value from an environment variable.
@@ -121,7 +122,7 @@ By default, logs and agent output are stored in `.dropstep/logs/`, with a separa
 The first time you run a `browser_agent` step, Dropstep will set up a virtual environment for the agent. This might take a minute or two as it downloads and installs necessary dependencies. Subsequent runs will be faster.
 </Info>
 
-You should see a browser window open and navigate to `https://dropstep.tech`. The agent will then perform the task you specified in the `prompt` field.
+You should see a browser window open and navigate to `https://dropstep.dev`. The agent will then perform the task you specified in the `prompt` field.
 
 You'll see logs similar to this:
 
@@ -142,7 +143,7 @@ The key part is the agent's summary message and the final JSON output, which by 
 This demonstrates the browser agent's ability to perform tasks in a web browser and return structured data.
 
 <Info>
-Visit the [Structured Output Guide](/structured-output) to learn more about customizing an agent's structured output format.
+Visit the [Structured Output Guide](/steps/browser-agent#structured-output) to learn more about customizing an agent's structured output format.
 </Info>
 
 ## Fin
