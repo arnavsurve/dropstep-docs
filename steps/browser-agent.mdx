@@ -16,10 +16,10 @@ To use the `browser_agent` step, set the `uses` field to `browser_agent`.
     Must be set to `browser_agent`.
 </ParamField>
 <ParamField path="provider" type="string" required>
-    The name of a [provider](/workflows/providers) (defined in the top-level `providers` section of your workflow) that the agent will use for its LLM interactions.
+    The name of a [provider](/workflows/providers) that the agent will use for its LLM interactions.
 </ParamField>
 <ParamField path="max_failures" type="integer" default="3">
-    The maximum number of consecutive failures (e.g., LLM errors, action errors) the agent can encounter before the entire step is marked as failed.
+    The maximum number of consecutive failures the agent can encounter before the entire step is marked as failed.
 </ParamField>
 <ParamField path="browser" type="object" required>
     Contains all browser-specific configurations for the agent.
@@ -43,9 +43,8 @@ To use the `browser_agent` step, set the `uses` field to `browser_agent`.
             </ParamField>
         </Expandable>
     </ParamField>
-    <ParamField path="download_dir" type="string">
+    <ParamField path="download_dir" type="string" default=".dropstep/output/<step_id>_default_downloads/">
         The local directory path where files downloaded by the browser agent should be saved.
-        - If not specified, downloads will go to a default directory: `.dropstep/output/<step_id>_default_downloads/`.
         - Paths are resolved relative to the workflow file if not absolute.
         - The agent must be explicitly prompted to perform a download action.
     </ParamField>

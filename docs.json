@@ -21,20 +21,14 @@
             ]
           },
           {
-            "group": "Guides",
-            "pages": [
-              "guides/hello-world",
-              "guides/deployment-ci"
-            ]
-          },
-          {
             "group": "Workflows",
             "pages": [
               "workflows/overview",
               "workflows/metadata",
               "workflows/inputs-varfiles",
               "workflows/templating",
-              "workflows/providers"
+              "workflows/providers",
+              "workflows/directory-structure"
             ]
           },
           {
@@ -46,35 +40,21 @@
               "steps/python",
               "steps/http"
             ]
-          },
-          {
-            "group": "CLI Reference",
-            "pages": [
-              "cli-reference/lint",
-              "cli-reference/run",
-              "cli-reference/directory-structure"
-            ]
           }
         ]
       },
       {
-        "tab": "API Reference",
-        "groups": [
-          {
-            "group": "API Documentation",
-            "pages": [
-              "api-reference/introduction"
-            ]
-          },
-          {
-            "group": "Endpoint Examples",
-            "pages": [
-              "api-reference/endpoint/get",
-              "api-reference/endpoint/create",
-              "api-reference/endpoint/delete",
-              "api-reference/endpoint/webhook"
-            ]
-          }
+        "tab": "CLI Reference",
+        "pages": [
+          "cli-reference/lint",
+          "cli-reference/run"
+        ]
+      },
+      {
+        "tab": "Guides",
+        "pages": [
+          "guides/hello-world",
+          "guides/deployment-ci"
         ]
       }
     ],
