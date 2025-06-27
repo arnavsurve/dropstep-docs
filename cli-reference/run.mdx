@@ -27,23 +27,47 @@ dropstep run
 
 When you invoke `dropstep run`, it performs the following sequence of actions:
 
-**1. Initialize Logging:** Dropstep sets up a dual-logging system, outputting logs to both the console and a JSON log file in the `.dropstep/logs` directory.
+<Info>
+  Dropstep automatically generates a unique UUID for each workflow run. This ID is used to identify the run in the `.dropstep` directory. 
+</Info>
 
-**2. Load `.env` File:** It automatically loads environment variables from a `.env` file in the current directory (if present), making them available for your [varfile](/workflows/inputs-varfiles).
-
-**3. Load Workflow and Varfile:** It parses your workflow and varfile.
-
-**4. Resolve and Validate Inputs:** It resolves all variables from the varfile (including those from the environment via `{{ env.* }}`) and applies any `default` values for inputs that were not provided. It then performs the same validation as [`dropstep lint`](/cli-reference/lint), ensuring all `required` inputs are satisfied.
-
-**5. Initialize Secrets Redaction:** It identifies all inputs marked as `secret: true` and initializes a redactor. From this point onward, the resolved values of these secrets will be replaced with `********` in all log outputs.
-
-**6. Resolve Providers:** It configures any [providers](/workflows/providers) defined in your workflow, resolving API keys from inputs or environment variable fallbacks.
-
-**7. Final Validation:** It performs a final validation of all step runners to ensure they are correctly configured with the resolved variables.
-
-**8. Execute Steps:** The engine begins executing steps sequentially. Each step's output is made available to subsequent steps via [templating](/workflows/templating).
-
-**9. Store Outputs:** Step outputs, especially from `browser_agent` steps, are saved to the `.dropstep/output` directory.
+<AccordionGroup>
+    <Accordion title="1. Initialize Logging" icon="file-lines">
+        Dropstep sets up a dual-logging system, outputting logs to both the console and a JSON log file in the `.dropstep/logs` directory.
+    </Accordion>
+    
+    <Accordion title="2. Load .env File" icon="file-code">
+        It automatically loads environment variables from a `.env` file in the current directory (if present), making them available for your [varfile](/workflows/inputs-varfiles).
+    </Accordion>
+    
+    <Accordion title="3. Load Workflow and Varfile" icon="file-import">
+        It parses your workflow and varfile, ensuring they are valid YAML documents and conform to the expected structure.
+    </Accordion>
+    
+    <Accordion title="4. Resolve and Validate Inputs" icon="check-circle">
+        It resolves all variables from the varfile (including those from the environment via `{{ env.* }}`) and applies any `default` values for inputs that were not provided. It then performs the same validation as [`dropstep lint`](/cli-reference/lint), ensuring all `required` inputs are satisfied.
+    </Accordion>
+    
+    <Accordion title="5. Initialize Secrets Redaction" icon="lock">
+        It identifies all inputs marked as `secret: true` and initializes a redactor. From this point onward, the resolved values of these secrets will be replaced with `********` in all log outputs.
+    </Accordion>
+    
+    <Accordion title="6. Resolve Providers" icon="key">
+        It configures any [providers](/workflows/providers) defined in your workflow, resolving API keys from inputs or environment variable fallbacks.
+    </Accordion>
+    
+    <Accordion title="7. Final Validation" icon="shield-check">
+        It performs a final validation of all step runners to ensure they are correctly configured with the resolved variables.
+    </Accordion>
+    
+    <Accordion title="8. Execute Steps" icon="play">
+        The engine begins executing steps sequentially. Each step's output is made available to subsequent steps via [templating](/workflows/templating).
+    </Accordion>
+    
+    <Accordion title="9. Store Outputs" icon="folder-open">
+        Step outputs, especially from `browser_agent` steps, are saved to the `.dropstep/output` directory.
+    </Accordion>
+</AccordionGroup>
 
 If any step fails, the workflow execution halts immediately and the `dropstep` command exits with an error.
 
