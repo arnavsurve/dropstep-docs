@@ -10,13 +10,13 @@ Dropstep features a powerful yet simple templating system that allows you to mak
 
 The basic syntax for a template expression is:
 
-```yaml icon="file-code"
+```yaml
 {{ expression }}
 ```
 
 ## Variable Sources
 
-When Dropstep encounters a `{{ expression }}` in a string field, it attempts to resolve the expression by looking for its value in the following sources in the following order:
+When Dropstep encounters the `{{ expression }}` syntax in a string field, it attempts to resolve the expression by looking for its value in the following sources in the following order:
 
 ### 1. Step Outputs
 The results of upstream steps are available to downstream steps. This is key for chaining operations and passing data through your workflow.
@@ -25,9 +25,9 @@ The results of upstream steps are available to downstream steps. This is key for
 `{{ steps.<step_id>.output }}` 
     
 #### Output Types
-    - [`shell`](/workflows/steps#shell)/[`python`](/workflows/steps#python): The entire trimmed STDOUT. If this string is valid JSON, `output` is parsed into a map/object; otherwise, it's treated as a raw string.
-    - [`http`](/workflows/steps#http): An object containing `status_code`, `headers` (map), and `body` (parsed JSON, string, or base64).
-    - [`browser_agent`](/workflows/steps#browser_agent): An object based on the step's `output_schema` or the default `{"summary": "string"}` structure.
+    - [`shell`](/steps/shell)/[`python`](/steps/python): The entire trimmed STDOUT. If this string is valid JSON, `output` is parsed into a map/object; otherwise, it's treated as a raw string.
+    - [`http`](/steps/http): An object containing `status_code`, `headers` (map), and `body` (parsed JSON, string, or base64).
+    - [`browser_agent`](/steps/browser-agent): An object based on the step's `output_schema` or the default `{"summary": "string"}` structure.
     
 <Info>
     If a step's `output` is an object (e.g., JSON), you can access its nested fields using dot notation.
@@ -135,7 +135,7 @@ Here, `{{ resume_doc }}` will resolve to `my_document_v2.pdf`. The *absolute pat
 If a variable you are templating holds a complex data structure (like a map or array), you can get its JSON representation by appending `.json` to the expression.
 
 <Info>
-    This is useful for passing structured data as a string argument to scripts or within API calls that expect stringified JSON.
+    This is useful for passing structured data as a string, properly quoted string argument to scripts or within API calls that expect stringified JSON.
 </Info>
 
 ### Syntax
@@ -143,17 +143,17 @@ If a variable you are templating holds a complex data structure (like a map or a
 
 `{{ steps.<id>.output.json }}`
 
-`{{ steps.<id>.output_file.json }}`
+### Example: Passing structured data to a shell script
 
+Imagine you have a [Python](/steps/python) step that returns a JSON object, and you want to pass it as a string argument to a shell script.
 
-### Example
 ```yaml dropstep.yml icon="file-code"
 steps:
   - id: get_structured_data
     uses: python
     run:
       inline: |
-        import json; 
+        import json
         print(json.dumps({"key": "value", "items": [1, 2]}))
 
   - id: use_as_string

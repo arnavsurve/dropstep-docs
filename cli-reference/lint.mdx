@@ -3,3 +3,96 @@ title: "Lint"
 description: "Validate your workflow files for syntax and best practices."
 icon: "broom-wide"
 ---
+
+The `dropstep lint` command is a static analysis tool that parses and validates your workflow files without executing them. It's an essential first step before running any workflow, helping you catch configuration errors, syntax issues, and invalid step definitions early.
+
+Linting saves time and prevents failed runs by ensuring your workflow is well-formed and ready for execution.
+
+## Usage
+
+From your workflow's root directory, simply run:
+
+```bash icon="terminal"
+dropstep lint
+```
+
+## Options
+
+<ParamField path="--workflow" type="string" default="dropstep.yml">
+    Specifies the path to the workflow configuration file you want to validate.
+</ParamField>
+<ParamField path="--varfile" type="string" default="dsvars.yml">
+    Specifies the path to the YAML varfile containing values for your workflow's inputs. This file is crucial for validating that all `required` inputs are satisfied.
+</ParamField>
+
+## What `lint` Validates
+
+The `lint` command performs a comprehensive check of your workflow, including:
+
+<AccordionGroup>
+    <Accordion title="1. YAML Syntax and Structure" icon="file-code">
+        It first ensures that your `dropstep.yml` file is a valid YAML document and conforms to the basic Dropstep workflow structure (e.g., `name`, `inputs`, `providers`, `steps` are correctly defined).
+    </Accordion>
+    <Accordion title="2. Inputs" icon="code">
+        It checks the `inputs` block in your workflow and cross-references it with the values provided in your varfile (and any `default` values). If an input is marked as `required: true` but has no value, the linting process will fail.
+    </Accordion>
+    <Accordion title="3. Provider Configuration" icon="key">
+        It validates the providers block by resolving any variables used within it (e.g., `api_key: {{ my_api_key }}`). This helps catch missing secrets or misconfigured API keys before the workflow runs.
+    </Accordion>
+
+    <Accordion title="4. Step Configuration" icon="robot">
+        The linter iterates through every step in your workflow and performs validation specific to that step module's (`uses` field). This includes checks like:
+        - **Is the `uses` value valid?** (e.g., `shell`, `python`, `http`, `browser_agent`).
+        - **`shell`/`python`:** Ensures you have provided *either* an `inline` script or a `path` to a script file, but not both.
+        - **`http`:** Verifies that required fields like `method` and `url` are present under the `call` key.
+        - **`browser_agent`:** Checks that a valid `provider` is referenced and that essential fields like `prompt` are defined under the `browser` key.
+    </Accordion>
+    <Accordion title="5. File and Path Existence" icon="folder-tree">
+        For fields that reference local files, the linter performs basic existence checks. For example:
+        - For a `browser_agent` step, it checks if the file specified in `output_schema` exists.
+        - For `shell` or `python` steps using the `path` field, it verifies the script file exists.
+    </Accordion>
+</AccordionGroup>
+
+## Example
+
+### Success Output
+
+If your workflow is valid, you will see a series of success messages:
+
+```bash icon="terminal"
+[INFO 2025-06-26T20:09:27-07:00] workflow: Validating dropstep.yml using dsvars.yml
+[INFO 2025-06-26T20:09:27-07:00] workflow: Successfully loaded workflow: Automated Job Application
+[INFO 2025-06-26T20:09:27-07:00] workflow: Successfully loaded and resolved varfile: dsvars.yml
+[INFO 2025-06-26T20:09:27-07:00] workflow: Required input validation passed
+[INFO 2025-06-26T20:09:27-07:00] workflow: Validating providers...
+[INFO 2025-06-26T20:09:27-07:00] workflow: Provider validation passed
+[INFO 2025-06-26T20:09:27-07:00] workflow: Validating individual steps...
+[INFO 2025-06-26T20:09:27-07:00] apply_for_job: Validating step configuration...
+[INFO 2025-06-26T20:09:27-07:00] apply_for_job: Existing Python venv found
+[WARN 2025-06-26T20:09:27-07:00] apply_for_job: Download directory does not exist yet, will attempt to create at runtime
+[INFO 2025-06-26T20:09:27-07:00] apply_for_job: Step configuration validation passed
+[INFO 2025-06-26T20:09:27-07:00] workflow: Successfully validated workflow configuration ✅
+```
+
+## Failure Output
+
+Imagine a `shell` step in your `dropstep.yml` is misconfigured with both an `inline` script and a `path` to a script file:
+
+```yaml dropstep.yml icon="file-code"
+steps:
+  - id: bad_step
+    uses: shell
+    run:
+      inline: "echo 'hello'"
+      path: "./my_script.sh" # ERROR: Cannot have both inline and path
+```
+
+Running `dropstep lint` would immediately catch this and produce a clear error message:
+
+```bash icon="terminal"
+[INFO 2025-06-26T20:13:44-07:00] workflow: Validating my-workflow.yml using dsvars.yml
+...
+[INFO 2025-06-26T20:13:44-07:00] bad_step: Validating step configuration...
+[ERROR 2025-06-26T20:13:44-07:00] bad_step: shell step "bad_step" must only define either 'inline' or 'path'
+```
